@@ -14,12 +14,13 @@
 
 use crate::dflt;
 use crate::onramp::prelude::*;
+use async_std::sync::{channel, Receiver};
+use async_std::task;
 use hostname::get_hostname;
 use serde_yaml::Value;
 use std::fs::File;
 use std::io::{BufRead, Read};
 use std::path::Path;
-use std::thread;
 use std::time::Duration;
 use xz2::read::XzDecoder;
 
@@ -74,8 +75,8 @@ struct Acc {
 // We got to allow this because of the way that the onramp works
 // with iterating over the data.
 #[allow(clippy::needless_pass_by_value)]
-fn onramp_loop(
-    rx: &Receiver<onramp::Msg>,
+async fn onramp_loop(
+    rx: Receiver<onramp::Msg>,
     data: Vec<u8>,
     config: &Config,
     mut preprocessors: Preprocessors,
@@ -108,8 +109,8 @@ fn onramp_loop(
     let mut id = 0;
     loop {
         if pipelines.is_empty() {
-            match rx.recv()? {
-                onramp::Msg::Connect(ps) => {
+            match rx.recv().await {
+                Some(onramp::Msg::Connect(ps)) => {
                     for p in &ps {
                         if p.0 == *METRICS_PIPELINE {
                             metrics_reporter.set_metrics_pipeline(p.clone());
@@ -118,31 +119,33 @@ fn onramp_loop(
                         }
                     }
                 }
-                onramp::Msg::Disconnect { tx, .. } => {
-                    tx.send(true)?;
+                Some(onramp::Msg::Disconnect { tx, .. }) => {
+                    tx.send(true).await;
                     return Ok(());
                 }
+                None => (), // FIXME .unwrap()
             };
             continue;
         } else {
             // TODO better sleep perhaps
             if let Some(ival) = config.interval {
-                thread::sleep(Duration::from_nanos(ival));
+                task::sleep(Duration::from_nanos(ival)).await;
             }
-            match rx.try_recv() {
-                Err(TryRecvError::Empty) => (),
-                Err(_e) => return Err("Crossbream receive error".into()),
-                Ok(onramp::Msg::Connect(mut ps)) => pipelines.append(&mut ps),
-                Ok(onramp::Msg::Disconnect { id, tx }) => {
-                    pipelines.retain(|(pipeline, _)| pipeline != &id);
-                    if pipelines.is_empty() {
-                        tx.send(true)?;
-                        return Ok(());
-                    } else {
-                        tx.send(false)?;
+            if !rx.is_empty() {
+                match rx.recv().await {
+                    None => return Err("Crossbream receive error".into()),
+                    Some(onramp::Msg::Connect(mut ps)) => pipelines.append(&mut ps),
+                    Some(onramp::Msg::Disconnect { id, tx }) => {
+                        pipelines.retain(|(pipeline, _)| pipeline != &id);
+                        if pipelines.is_empty() {
+                            tx.send(true).await;
+                            return Ok(());
+                        } else {
+                            tx.send(false).await;
+                        }
                     }
-                }
-            };
+                };
+            }
         }
         if Some(acc.count) == iters {
             return Ok(());
@@ -154,6 +157,7 @@ fn onramp_loop(
 
         if let Some(data) = acc.consuming.pop() {
             let mut ingest_ns = nanotime();
+
             send_event(
                 &pipelines,
                 &mut preprocessors,
@@ -163,7 +167,9 @@ fn onramp_loop(
                 &origin_uri,
                 id,
                 data,
-            );
+            )
+            .await;
+
             id += 1;
         }
     }
@@ -176,15 +182,15 @@ impl Onramp for Blaster {
         preprocessors: &[String],
         metrics_reporter: RampReporter,
     ) -> Result<onramp::Addr> {
-        let (tx, rx) = bounded(0);
+        let (tx, rx) = channel(64);
         let data2 = self.data.clone();
         let config2 = self.config.clone();
         let codec = codec::lookup(&codec)?;
         let preprocessors = make_preprocessors(&preprocessors)?;
-        thread::Builder::new()
+        task::Builder::new()
             .name(format!("onramp-blaster-{}", "???"))
-            .spawn(move || {
-                onramp_loop(&rx, data2, &config2, preprocessors, codec, metrics_reporter)
+            .spawn(async move {
+                onramp_loop(rx, data2, &config2, preprocessors, codec, metrics_reporter).await
             })?;
         Ok(tx)
     }

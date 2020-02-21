@@ -27,32 +27,20 @@
 
 #[macro_use]
 extern crate serde_derive;
-#[cfg(feature = "kafka")]
-extern crate rdkafka_sys;
 // This is silly but serde is forcing you to import serde if you want serde_derive
 #[allow(unused_extern_crates)]
 extern crate serde;
-#[cfg(feature = "mssql")]
-extern crate tiberius;
-#[cfg(feature = "kafka")]
-extern crate tokio_threadpool;
 
 use clap::load_yaml;
 use dirs;
 use http::status::StatusCode;
-use tremor_runtime;
-use tremor_runtime::config;
-use tremor_runtime::errors;
-use tremor_runtime::functions as tr_fun;
-use tremor_runtime::rest;
-use tremor_runtime::utils;
-use tremor_script::grok;
+use tremor_pipeline;
+use tremor_runtime::{self, config, errors, functions as tr_fun, rest, utils};
 use tremor_script::interpreter::AggrType;
-use tremor_script::EventContext as Context;
+use tremor_script::{grok, EventContext as Context};
 
 use clap::ArgMatches;
 use std::io;
-use tremor_pipeline;
 
 use crate::errors::*;
 use halfbrown::HashMap;

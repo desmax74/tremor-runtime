@@ -115,3 +115,5 @@ ws-echo = []
 
 [patch.crates-io]
 tide = { git = "https://github.com/Licenser/tide", branch = "result-into-response" }
+async-std = { path = "../../async-std" }
+crossbeam-deque = { path = "../../crossbeam/crossbeam-deque" }

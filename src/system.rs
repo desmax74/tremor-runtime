@@ -21,14 +21,13 @@ use crate::repository::{
 };
 use crate::url::TremorURL;
 use crate::utils::nanotime;
+use async_std::fs::File;
+use async_std::io::prelude::*;
+use async_std::path::Path;
 use async_std::{
     sync::{self, channel},
     task::{self, JoinHandle},
 };
-//use crossbeam_channel::Sender as CbSender;
-use async_std::fs::File;
-use async_std::io::prelude::*;
-use async_std::path::Path;
 use hashbrown::HashMap;
 use tremor_pipeline;
 
