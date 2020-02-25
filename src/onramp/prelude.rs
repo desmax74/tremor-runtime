@@ -20,7 +20,7 @@ pub(crate) use crate::pipeline;
 pub(crate) use crate::preprocessor::{self, Preprocessors};
 pub(crate) use crate::system::METRICS_PIPELINE;
 pub(crate) use crate::url::TremorURL;
-pub(crate) use crate::utils::{nanotime, ConfigImpl};
+pub(crate) use crate::utils::{hostname, nanotime, ConfigImpl};
 pub(crate) use async_std::sync::{channel, Receiver};
 pub(crate) use async_std::task;
 pub(crate) use simd_json::json;

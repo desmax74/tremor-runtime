@@ -19,7 +19,6 @@ use crate::onramp::prelude::*;
 //NOTE: This is required for StreamHander's stream
 use futures::StreamExt;
 use halfbrown::HashMap;
-use hostname::get_hostname;
 use rdkafka::client::ClientContext;
 use rdkafka::config::{ClientConfig, RDKafkaLogLevel};
 use rdkafka::consumer::stream_consumer::StreamConsumer;
@@ -97,7 +96,6 @@ async fn onramp_loop(
     mut codec: Box<dyn Codec>,
     mut metrics_reporter: RampReporter,
 ) -> Result<()> {
-    let hostname = get_hostname().unwrap_or_else(|| "tremor-host.local".to_string());
     let context = LoggingConsumerContext;
     let mut client_config = ClientConfig::new();
     let mut pipelines: Vec<(TremorURL, pipeline::Addr)> = Vec::new();
@@ -105,7 +103,7 @@ async fn onramp_loop(
     info!("Starting kafka onramp");
     let client_config = client_config
         .set("group.id", &config.group_id)
-        .set("client.id", &format!("tremor-{}-{:?}", hostname, tid))
+        .set("client.id", &format!("tremor-{}-{:?}", hostname(), tid))
         .set("bootstrap.servers", &config.brokers.join(","))
         .set("enable.partition.eof", "false")
         .set("session.timeout.ms", "6000")

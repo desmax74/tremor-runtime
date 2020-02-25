@@ -22,7 +22,6 @@
 
 use crate::offramp::prelude::*;
 use halfbrown::HashMap;
-use hostname::get_hostname;
 use rdkafka::config::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
 use std::fmt;
@@ -56,10 +55,7 @@ pub struct Config {
 impl ConfigImpl for Config {}
 
 fn d_host() -> String {
-    match get_hostname() {
-        Some(h) => h,
-        None => "tremor-host.local".to_string(),
-    }
+    hostname()
 }
 
 /// Kafka offramp connectoz
