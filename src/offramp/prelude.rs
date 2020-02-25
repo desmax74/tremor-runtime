@@ -23,6 +23,7 @@ pub(crate) use crate::url::TremorURL;
 pub(crate) use crate::utils::ConfigImpl;
 pub(crate) use crate::utils::{duration_to_millis, nanotime};
 pub(crate) use crate::{Event, OpConfig};
+pub(crate) use async_std::task;
 //pub(crate) use crossbeam_channel::{Receiver, Sender, TryRecvError};
 use std::mem;
 

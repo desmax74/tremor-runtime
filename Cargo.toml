@@ -32,7 +32,7 @@ byteorder = "1"
 chrono = "0.4"
 elastic = "0.21.0-pre.5"
 error-chain="0.12"
-futures = "0.1"
+futures = "0.3"
 hashbrown = { version = "0.6", features = ["serde"] }
 hostname = "0.1"
 log4rs = "0.8"
@@ -49,7 +49,8 @@ simd-json = {version = "0.2", features = ["known-key"]}
 threadpool = "1"
 tremor-pipeline = { path = "tremor-pipeline" }
 url = "1.7" # we can't update because of deps ...
-async-tungstenite = "0.4.0"
+async-tungstenite = { version = "0.4.0", features = ["async-std-runtime"] }
+
 
 log = "0.4"
 serde_derive = "1"
@@ -80,8 +81,8 @@ postgres-protocol = { version = "0.5" }
 tokio-postgres = { version = "0.5.2" }
 
 # kafka
-rdkafka = {version = "0.22", optional = true}
-rdkafka-sys = {version = "=1.2.2", optional = true}
+rdkafka = {version = "0.23", optional = true}
+rdkafka-sys = {version = "1.3", optional = true}
 
 # crononome
 cron = "0.6.0"
@@ -96,6 +97,11 @@ hyper = "0.10"  # chan't update this because of google
 
 # logstash grok patterns
 grok = "1"
+
+[dependencies.tungstenite]
+version = "0.10.0"
+default-features = false
+
 
 [dev-dependencies]
 matches = "0.1"

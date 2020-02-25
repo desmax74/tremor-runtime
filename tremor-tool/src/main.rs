@@ -27,15 +27,9 @@
 
 #[macro_use]
 extern crate serde_derive;
-#[cfg(feature = "kafka")]
-extern crate rdkafka_sys;
 // This is silly but serde is forcing you to import serde if you want serde_derive
 #[allow(unused_extern_crates)]
 extern crate serde;
-#[cfg(feature = "mssql")]
-extern crate tiberius;
-#[cfg(feature = "kafka")]
-extern crate tokio_threadpool;
 
 use clap::load_yaml;
 use dirs;
